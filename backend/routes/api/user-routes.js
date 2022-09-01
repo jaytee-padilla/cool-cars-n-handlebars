@@ -55,6 +55,7 @@ router.post('/', (req, res) => {
 // PUT a specific user /api/user/:id
 router.put('/:id', (req, res) => {
   User.update(req.body, {
+    individualHooks: true,
     where: {
       id: req.params.id
     }
@@ -65,7 +66,7 @@ router.put('/:id', (req, res) => {
       return;
     }
 
-    res.json({message: `User id ${dbUserData} successfully updated`});
+    res.json(dbUserData);
   })
   .catch(err => {
     console.error(err);
