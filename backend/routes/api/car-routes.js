@@ -5,6 +5,7 @@ const { Car, User } = require('../../models/index');
 router.get('/', (req, res) => {
   Car.findAll({
     attributes: ['id', 'year_made', 'brand', 'model', 'drivetrain', 'image_url', 'created_at'],
+    order: [['created_at', 'DESC']],
     include: [
       {
         model: User,
