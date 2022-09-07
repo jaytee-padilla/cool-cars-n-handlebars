@@ -11,7 +11,7 @@ Car.init(
       primaryKey: true,
       autoIncrement: true
     },
-    yearMade: {
+    year_made: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -27,7 +27,7 @@ Car.init(
       type: DataTypes.STRING,
       allowNull: false
     },
-    imageUrl: {
+    image_url: {
       type: DataTypes.STRING,
       validate: {
         isURL: true
