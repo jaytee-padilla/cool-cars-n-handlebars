@@ -117,7 +117,7 @@ router.delete('/:id', (req, res) => {
         return;
       }
 
-      res.json({ message: `User id ${dbUserData} deleted successfully` });
+      res.json({ message: `User id ${req.params.id} deleted successfully` });
     })
     .catch((err) => {
       console.error(err);
