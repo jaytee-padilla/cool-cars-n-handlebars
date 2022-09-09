@@ -1,5 +1,6 @@
 const router = require('express').Router();
-const { Car, User } = require('../../models/index');
+const { Car, User, Vote } = require('../../models/index');
+const sequelize = require('../../config/connection');
 
 // GET all car posts
 router.get('/', (req, res) => {
@@ -61,6 +62,40 @@ router.post('/', (req, res) => {
     .then(dbCarData => {
       res.status(201).json(dbCarData);
     })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json(err);
+    });
+});
+
+// PUT/edit vote count on a car post
+router.put('/upvote', (req, res) => {
+  Vote.create({
+    user_id: req.body.user_id,
+    car_id: req.body.car_id
+  })
+    .then(() => {
+      return Car.findOne({
+        where: {
+          id: req.body.car_id
+        },
+        attributes: [
+          'id',
+          'year_made',
+          'brand',
+          'model',
+          'drivetrain',
+          'image_url',
+          'created_at',
+          [
+            // use raw MySQL aggregate function query to get a count of how many votes the post has and return it under the name `vote_count`
+            sequelize.literal('(SELECT COUNT(*) FROM vote WHERE car.id = vote.car_id)'),
+            'vote_count'
+          ]
+        ]
+      })
+    })
+    .then(dbCarData => res.json(dbCarData))
     .catch(err => {
       console.error(err);
       res.status(500).json(err);
