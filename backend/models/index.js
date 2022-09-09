@@ -12,13 +12,14 @@ Car.belongsTo(User, {
   onDelete: 'cascade'
 });
 
-User.belongsToMany('Car', {
+// vote feature data associations
+User.belongsToMany(Car, {
   through: Vote,
   as: 'voted_cars',
   foreignKey: 'user_id'
 });
 
-Car.belongsToMany('User', {
+Car.belongsToMany(User, {
   through: Vote,
   as: 'voted_cars',
   foreignKey: 'car_id'
