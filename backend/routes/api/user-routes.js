@@ -1,11 +1,21 @@
 const router = require('express').Router();
-const { User } = require('../../models/index');
+const { User, Car, Vote } = require('../../models/index');
+const sequelize = require('../../config/connection');
 
 // GET all users /api/users
 router.get('/', (req, res) => {
   User.findAll({
     attributes: {
       exclude: ['password'],
+      include: [
+        [
+          // return total amount of cars user has voted on
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM vote WHERE user.id = vote.user_id)'
+          ),
+          'total_vote_count',
+        ],
+      ],
     },
   })
     .then((dbUserData) => res.json(dbUserData))
@@ -18,10 +28,30 @@ router.get('/', (req, res) => {
 // GET a specific user /api/user/:id
 router.get('/:id', (req, res) => {
   User.findOne({
+    where: { id: req.params.id },
     attributes: {
       exclude: ['password'],
     },
-    where: { id: req.params.id },
+    include: [
+      {
+        model: Car,
+        attributes: [
+          'id',
+          'year_made',
+          'brand',
+          'model',
+          'drivetrain',
+          'image_url',
+          'created_at',
+        ],
+      },
+      {
+        model: Car,
+        attributes: ['year_made', 'brand', 'model'],
+        through: Vote,
+        as: 'voted_cars',
+      },
+    ],
   })
     .then((dbUserData) => {
       if (!dbUserData) {
