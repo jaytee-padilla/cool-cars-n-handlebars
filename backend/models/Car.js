@@ -1,7 +1,38 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
+const Vote = require('./Vote');
 
-class Car extends Model {}
+class Car extends Model {
+  static upvote(body, models) {
+    return models.Vote.create({
+      user_id: body.user_id,
+      car_id: body.car_id
+    })
+    .then(() => {
+      return Car.findOne({
+        where: {
+          id: body.car_id
+        },
+        attributes: [
+          'id',
+          'year_made',
+          'brand',
+          'model',
+          'drivetrain',
+          'image_url',
+          'created_at',
+          [
+            // use raw MySQL aggregate function query to get a count of how many votes the post has and return it under the name `vote_count`
+            sequelize.literal(
+              '(SELECT COUNT(*) FROM vote WHERE car.id = vote.car_id)'
+            ),
+            'vote_count',
+          ],
+        ]
+      })
+    })
+  }
+}
 
 Car.init(
   {
