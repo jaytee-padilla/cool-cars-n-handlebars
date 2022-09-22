@@ -1,6 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
-const Vote = require('./Vote');
 
 class Car extends Model {
   static upvote(body, models) {
