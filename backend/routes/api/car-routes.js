@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { Car, User, Vote } = require('../../models/index');
+const { Car, User, Vote, Comment } = require('../../models/index');
 const sequelize = require('../../config/connection');
 
 // GET all car posts
@@ -23,9 +23,17 @@ router.get('/', (req, res) => {
     order: [['created_at', 'DESC']],
     include: [
       {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'user_id', 'car_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
+      {
         model: User,
         attributes: ['id', 'username'],
-      },
+      }
     ],
   })
     .then((dbCarData) => {
@@ -52,6 +60,14 @@ router.get('/:id', (req, res) => {
       [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE car.id = vote.car_id)'), 'vote_count']
     ],
     include: [
+      {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'user_id', 'car_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
       {
         model: User,
         attributes: ['id', 'username'],
