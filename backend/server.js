@@ -3,7 +3,7 @@ const routes = require('./routes');
 const sequelize = require('./config/connection');
 
 const app = express();
-const PORT = `0.0.0.0:$PORT` || 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -12,7 +12,7 @@ app.use(routes);
 
 sequelize.sync({ force: false })
   .then(() => {
-    app.listen(PORT, () => {
+    app.listen(`0.0.0.0:${PORT}`, () => {
       console.log(`Now listening on PORT: ${PORT}`);
     })
   });
