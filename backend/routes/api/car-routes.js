@@ -1,22 +1,45 @@
 const router = require('express').Router();
-const { Car, User } = require('../../models/index');
+const { Car, User, Vote, Comment } = require('../../models/index');
+const sequelize = require('../../config/connection');
 
 // GET all car posts
 router.get('/', (req, res) => {
   Car.findAll({
-    attributes: ['id', 'year_made', 'brand', 'model', 'drivetrain', 'image_url', 'created_at'],
+    attributes: [
+      'id',
+      'year_made',
+      'brand',
+      'model',
+      'drivetrain',
+      'image_url',
+      'created_at',
+      [
+        sequelize.literal(
+          '(SELECT COUNT(*) FROM vote WHERE car.id = vote.car_id)'
+        ),
+        'vote_count',
+      ],
+    ],
     order: [['created_at', 'DESC']],
     include: [
       {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'user_id', 'car_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
+      {
         model: User,
-        attributes: ['id', 'username']
+        attributes: ['id', 'username'],
       }
-    ]
+    ],
   })
-    .then(dbCarData => {
+    .then((dbCarData) => {
       res.status(200).json(dbCarData);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       res.status(500).json(err);
     });
@@ -26,15 +49,32 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   Car.findOne({
     where: { id: req.params.id },
-    attributes: ['id', 'year_made', 'brand', 'model', 'drivetrain', 'image_url', 'created_at'],
+    attributes: [
+      'id',
+      'year_made',
+      'brand',
+      'model',
+      'drivetrain',
+      'image_url',
+      'created_at',
+      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE car.id = vote.car_id)'), 'vote_count']
+    ],
     include: [
       {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'user_id', 'car_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+      },
+      {
         model: User,
-        attributes: ['id', 'username']
-      }
-    ]
+        attributes: ['id', 'username'],
+      },
+    ],
   })
-    .then(dbCarData => {
+    .then((dbCarData) => {
       if (!dbCarData) {
         res.status(404).json({ message: 'No car found with the provided id' });
         return;
@@ -42,7 +82,7 @@ router.get('/:id', (req, res) => {
 
       res.status(200).json(dbCarData);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       res.status(500).json(err);
     });
@@ -56,14 +96,25 @@ router.post('/', (req, res) => {
     model: req.body.model,
     drivetrain: req.body.drivetrain,
     image_url: req.body.image_url,
-    user_id: req.body.user_id
+    user_id: req.body.user_id,
   })
-    .then(dbCarData => {
+    .then((dbCarData) => {
       res.status(201).json(dbCarData);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       res.status(500).json(err);
+    });
+});
+
+// PUT/edit vote count on a car post
+router.put('/upvote', (req, res) => {
+  // custom static method created in models/Car.js
+  Car.upvote(req.body, { Vote })
+    .then(updatedCarData => res.json(updatedCarData))
+    .catch(err => {
+      console.error(err);
+      res.status(400).json(err);
     });
 });
 
@@ -71,18 +122,18 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
   Car.update(req.body, {
     where: {
-      id: req.params.id
-    }
+      id: req.params.id,
+    },
   })
-    .then(dbCarData => {
+    .then((dbCarData) => {
       if (!dbCarData[0]) {
-        res.status(404).json({ message: 'No car found with the provided id'});
+        res.status(404).json({ message: 'No car found with the provided id' });
         return;
       }
 
       res.status(200).json({ message: 'Car post updated successfully' });
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       res.status(500).json(err);
     });
@@ -92,10 +143,10 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   Car.destroy({
     where: {
-      id: req.params.id
-    }
+      id: req.params.id,
+    },
   })
-    .then(dbCarData => {
+    .then((dbCarData) => {
       if (!dbCarData) {
         res.status(404).json({ message: 'No car found with the provided id' });
         return;
@@ -103,7 +154,7 @@ router.delete('/:id', (req, res) => {
 
       res.json({ message: `Car id ${req.params.id} deleted successfully` });
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       res.status(500).json(err);
     });
