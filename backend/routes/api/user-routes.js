@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, Car, Vote } = require('../../models/index');
+const { User, Car, Vote, Comment } = require('../../models/index');
 const sequelize = require('../../config/connection');
 
 // GET all users /api/users
@@ -44,6 +44,14 @@ router.get('/:id', (req, res) => {
           'image_url',
           'created_at',
         ],
+      },
+      {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'created_at'],
+        include: {
+          model: Car,
+          attributes: ['id', 'year_made', 'brand', 'model']
+        }
       },
       {
         model: Car,
